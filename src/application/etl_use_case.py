@@ -98,7 +98,7 @@ class ETLUseCase:
             RuntimeError: If lock cannot be acquired.
         """
         config = config or {}
-        dataset_id = config.get("dataset_id", "unknown")
+        dataset_id = config.get("dataset_id", "default")
         lock_key = None
 
         logger.info("Starting ETL pipeline for dataset: %s", dataset_id)

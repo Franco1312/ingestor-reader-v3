@@ -48,7 +48,17 @@ Each dataset has a YAML configuration file defining:
 - Parsing rules and series mappings
 - Normalization settings (timezone, primary keys)
 - Transformation metadata (unit, frequency)
+- Load destination and versioning strategy
 - State and lock management backends
+
+### S3 Versioned Loading
+
+The pipeline supports versioned data persistence to S3:
+- Automatic version creation with timestamp-based IDs
+- Partitioned storage by series, year, and month
+- Manifest files with metadata for each version
+- Atomic version pointer updates
+- Configurable partition strategies per dataset
 
 ## Project Structure
 
@@ -58,12 +68,16 @@ src/
 ├── application/         # Use cases and orchestration
 └── infrastructure/      # Plugin implementations and adapters
     ├── plugins/         # Plugin implementations by type
+    ├── partitioning/    # Partition strategies for data organization
+    ├── storage/         # Storage backends (Parquet, etc.)
+    ├── versioning/      # Version management and manifests
     ├── state_managers/  # State persistence backends
     └── lock_managers/   # Lock management backends
 
 config/
 └── datasets/            # Dataset YAML configurations
 
+docs/                    # Design documentation
 tests/                   # Test suite with builder patterns
 ```
 
@@ -89,12 +103,19 @@ pip install -e ".[dev]"
 
 Run an ETL pipeline for a dataset:
 ```bash
-python main.py <dataset_id>
+python -m src.cli <dataset_id>
 ```
 
 Example:
 ```bash
-python main.py bcra_infomondia_series
+python -m src.cli bcra_infomondia_series
+```
+
+### Logging
+
+The pipeline includes comprehensive logging. Use the `--verbose` flag for detailed debug information:
+```bash
+python -m src.cli bcra_infomondia_series --verbose
 ```
 
 ## Important Considerations
@@ -127,6 +148,40 @@ python main.py bcra_infomondia_series
 - Lock key defaults to `etl:{dataset_id}` but can be customized
 - Lock timeout defaults to 300 seconds
 - DynamoDB locks require proper AWS credentials and table configuration
+
+### S3 Versioned Loading
+
+The `s3_versioned` loader persists data to S3 with versioning:
+
+**Configuration:**
+```yaml
+load:
+  plugin: s3_versioned
+  bucket: your-s3-bucket-name
+  aws_region: us-east-1  # optional, default: us-east-1
+  partition_strategy: series_year_month  # optional, default: series_year_month
+  compression: snappy  # optional, default: snappy
+```
+
+**S3 Structure:**
+```
+datasets/{dataset_id}/
+├── index/
+│   └── current_version.txt  # Pointer to current version
+└── versions/
+    └── {version_id}/
+        ├── data/
+        │   └── {internal_series_code}/year={YYYY}/month={MM}/
+        │       └── data.parquet
+        └── manifest.json  # Version metadata
+```
+
+**Environment Variables:**
+- `AWS_ACCESS_KEY_ID`: AWS access key (optional if using IAM roles)
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key (optional if using IAM roles)
+- `AWS_REGION`: AWS region (optional, default: us-east-1)
+
+See `.env.example` for reference.
 
 ### Adding New Plugins
 
