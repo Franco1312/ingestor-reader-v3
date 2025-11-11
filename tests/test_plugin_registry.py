@@ -153,5 +153,7 @@ class TestPluginRegistry:
 
         registry.register_loader("test_loader", mock_loader_class)  # type: ignore[arg-type]
 
-        loader = registry.get_loader("test_loader")
+        config = {"dataset_id": "test", "load": {"bucket": "test-bucket"}}
+        loader = registry.get_loader("test_loader", config=config)
         assert loader is not None
+        mock_loader_class.assert_called_once_with(config=config)

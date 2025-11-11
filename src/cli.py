@@ -1,6 +1,7 @@
 """Command-line interface for running ETL pipelines."""
 
 import argparse
+import logging
 import sys
 
 import requests
@@ -100,7 +101,7 @@ def _get_loader(registry: PluginRegistry, config: Dict[str, Any]) -> Optional[Lo
     """
     load_config = config.get("load", {})
     if load_config.get("plugin"):
-        return registry.get_loader(load_config["plugin"])
+        return registry.get_loader(load_config["plugin"], config=config)
     return None
 
 
@@ -261,6 +262,18 @@ def run_etl(dataset_id: str) -> int:
 
 def main():
     """Main entry point for CLI."""
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # Suppress noisy third-party logs
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+
     parser = argparse.ArgumentParser(
         description="Run ETL pipeline for a dataset",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -270,8 +283,19 @@ def main():
         type=str,
         help="Dataset identifier (e.g., 'bcra_infomondia_series')",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level)",
+    )
 
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.info("Verbose logging enabled")
+
     exit_code = run_etl(args.dataset_id)
     sys.exit(exit_code)
 

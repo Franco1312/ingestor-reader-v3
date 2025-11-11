@@ -2,6 +2,7 @@
 
 from src.application.plugin_registry import PluginRegistry
 from src.infrastructure.plugins.extractors import register_extractors
+from src.infrastructure.plugins.loaders import register_loaders
 from src.infrastructure.plugins.normalizers import register_normalizers
 from src.infrastructure.plugins.parsers import register_parsers
 from src.infrastructure.plugins.transformers import register_transformers
@@ -20,6 +21,7 @@ def initialize_plugins(registry: PluginRegistry) -> None:
     register_parsers(registry)
     register_normalizers(registry)
     register_transformers(registry)
+    register_loaders(registry)
 
 
 def create_plugin_registry() -> PluginRegistry:

@@ -16,6 +16,12 @@ normalize:
   timezone: America/Argentina/Buenos_Aires
 transform:
   plugin: bcra_infomondia
+load:
+  plugin: s3_versioned
+  bucket: ingestor-datasets
+  aws_region: us-east-1
+  partition_strategy: series_year_month
+  compression: snappy
 state:
   kind: file
   state_file: state.json

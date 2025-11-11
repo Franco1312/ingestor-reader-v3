@@ -75,11 +75,12 @@ class Loader(ABC):
     """Interface for data loading."""
 
     @abstractmethod
-    def load(self, data: Any) -> None:
+    def load(self, data: Any, config: Dict[str, Any]) -> None:
         """Load data to destination.
 
         Args:
             data: Data to load.
+            config: Configuration dictionary for loading.
         """
 
 

@@ -135,11 +135,12 @@ class PluginRegistry:
             raise ValueError(f"Transformer plugin '{name}' not found")
         return self._transformers[name]()
 
-    def get_loader(self, name: str) -> Loader:
+    def get_loader(self, name: str, config: Optional[Dict[str, Any]] = None) -> Loader:
         """Get a loader plugin by name.
 
         Args:
             name: Plugin name identifier.
+            config: Configuration dictionary for plugin initialization.
 
         Returns:
             Loader instance.
@@ -149,4 +150,5 @@ class PluginRegistry:
         """
         if name not in self._loaders:
             raise ValueError(f"Loader plugin '{name}' not found")
-        return self._loaders[name]()
+        plugin_class = self._loaders[name]
+        return plugin_class(config=config)  # type: ignore[call-arg]
