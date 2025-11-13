@@ -180,8 +180,17 @@ datasets/{dataset_id}/
 - `AWS_ACCESS_KEY_ID`: AWS access key (optional if using IAM roles)
 - `AWS_SECRET_ACCESS_KEY`: AWS secret key (optional if using IAM roles)
 - `AWS_REGION`: AWS region (optional, default: us-east-1)
+- `SNS_PROJECTION_TOPIC_ARN`: SNS topic ARN for projection update notifications (optional)
 
-See `.env.example` for reference.
+**Example `.env` file:**
+```bash
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+SNS_PROJECTION_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:projection-updates
+```
+
+**Note:** If `SNS_PROJECTION_TOPIC_ARN` is set, the pipeline will automatically publish SNS notifications when projections are updated.
 
 ### Adding New Plugins
 

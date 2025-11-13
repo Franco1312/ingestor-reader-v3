@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import sys
 
 import requests
@@ -23,6 +24,9 @@ from src.domain.interfaces import (
 )
 from src.infrastructure.config_loader import YamlConfigLoader
 from src.infrastructure.lock_managers.lock_manager_factory import LockManagerFactory
+from src.infrastructure.notifications.projection_notification_service import (
+    ProjectionNotificationService,
+)
 from src.infrastructure.plugins import create_plugin_registry
 from src.infrastructure.projections.projection_manager import ProjectionManager
 from src.infrastructure.state_managers.state_manager_factory import StateManagerFactory
@@ -133,6 +137,26 @@ def _get_state_manager(config: Dict[str, Any]) -> Optional[StateManager]:
     return StateManagerFactory.create(state_config)
 
 
+def _create_notification_service(aws_region: str) -> Optional[ProjectionNotificationService]:
+    """Create notification service if SNS topic ARN is configured.
+
+    Args:
+        aws_region: AWS region.
+
+    Returns:
+        ProjectionNotificationService instance or None if not configured.
+    """
+    topic_arn = os.environ.get("SNS_PROJECTION_TOPIC_ARN")
+    if not topic_arn:
+        return None
+
+    return ProjectionNotificationService(
+        topic_arn=topic_arn,
+        sns_client=None,
+        aws_region=aws_region,
+    )
+
+
 def _get_lock_manager(config: Dict[str, Any]) -> Optional[LockManager]:
     """Get lock manager from factory based on config.
 
@@ -181,7 +205,14 @@ def _get_projection_use_case(
             copy_workers=copy_workers,
             merge_workers=merge_workers,
         )
-        return ProjectionUseCase(projection_manager=projection_manager)
+
+        notification_service = _create_notification_service(aws_region)
+
+        return ProjectionUseCase(
+            projection_manager=projection_manager,
+            notification_service=notification_service,
+            bucket=bucket,
+        )
     except AttributeError:
         return None
 

@@ -41,7 +41,7 @@ class ProjectionManager:
         self._copy_workers = copy_workers
         self._merge_workers = merge_workers
 
-    def project_version(self, version_id: str, dataset_id: str) -> None:
+    def project_version(self, version_id: str, dataset_id: str) -> bool:
         """Project a version to projections.
 
         Executes the complete flow:
@@ -56,6 +56,9 @@ class ProjectionManager:
             version_id: Version identifier.
             dataset_id: Dataset identifier.
 
+        Returns:
+            True if new data was written to projections, False otherwise.
+
         Raises:
             ValueError: If manifest is not found.
         """
@@ -65,7 +68,7 @@ class ProjectionManager:
             logger.info(
                 "Version %s already projected for dataset %s, skipping", version_id, dataset_id
             )
-            return
+            return False
 
         manifest = self._load_manifest(version_id, dataset_id)
         if manifest is None:
@@ -74,7 +77,7 @@ class ProjectionManager:
         parquet_files = manifest.get("parquet_files", [])
         if not parquet_files:
             logger.warning("No parquet files in manifest for version %s", version_id)
-            return
+            return False
 
         self._cleanup_staging(dataset_id)
         self._copy_version_to_staging(version_id, dataset_id, parquet_files)
@@ -83,6 +86,7 @@ class ProjectionManager:
         self._record_projected_version(version_id, dataset_id)
 
         logger.info("Successfully projected version %s for dataset %s", version_id, dataset_id)
+        return True
 
     def _load_manifest(self, version_id: str, dataset_id: str) -> Optional[Dict[str, Any]]:
         """Load manifest for a version.
