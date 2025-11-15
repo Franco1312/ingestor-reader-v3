@@ -170,12 +170,17 @@ class ETLUseCase:
             return None
 
         logger.info("Loading state for incremental processing")
-        series_last_dates = self._state_manager.get_series_last_dates(config)
-        if series_last_dates:
-            logger.info("Found state for %d series", len(series_last_dates))
-        else:
-            logger.info("No previous state found, processing all data")
-        return series_last_dates
+        try:
+            series_last_dates = self._state_manager.get_series_last_dates(config)
+            if series_last_dates:
+                logger.info("Found state for %d series", len(series_last_dates))
+            else:
+                logger.info("No previous state found, processing all data")
+            return series_last_dates
+        except Exception as e:
+            logger.error("Error loading state: %s", e, exc_info=True)
+            logger.warning("Continuing without state (will process all data)")
+            return None
 
     def _execute_parse(self, raw_data: bytes, config: dict, series_last_dates: Optional[dict], step_number: int, total_steps: int) -> list:
         """Execute parse step."""
