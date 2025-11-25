@@ -5,8 +5,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-import boto3
 from botocore.exceptions import ClientError
+
+from src.infrastructure.utils.aws_utils import create_s3_client
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class ProjectionManifestManager:
             aws_region: AWS region (default: us-east-1).
         """
         self._bucket = bucket
-        self._s3_client = s3_client or boto3.client("s3", region_name=aws_region)
+        self._s3_client = create_s3_client(aws_region=aws_region, s3_client=s3_client)
 
     def is_version_projected(self, dataset_id: str, version_id: str) -> bool:
         """Check if a version has already been projected.

@@ -1,0 +1,53 @@
+dataset_id: indec_ipc
+provider: INDEC
+frequency: M
+windowInDays: 365
+source:
+  kind: indec_ipc_http
+  url_template: https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_{MM}_{YY}.xls
+  timezone: America/Argentina/Buenos_Aires
+  format: xls
+parse:
+  plugin: indec_ipc
+normalize:
+  plugin: indec_ipc
+  primary_keys:
+    - obs_time
+    - internal_series_code
+  timezone: America/Argentina/Buenos_Aires
+transform:
+  plugin: indec_ipc
+load:
+  plugin: s3_versioned
+  bucket: ingestor-datasets
+  aws_region: us-east-1
+  partition_strategy: series_year_month
+  projection:
+    copy_workers: 10
+    merge_workers: 5
+state:
+  kind: file
+  path: datasets/indec_ipc/state.json
+lock: null
+parse_config:
+  file_type: series
+  series_map:
+    - internal_series_code: INDEC_IPC_VARIACION_MENSUAL_PCT_M
+      unit: pct
+      frequency: M
+      sheet: Variación mensual IPC Nacional
+      fecha_row: 6
+      fecha_start_col: B
+      valor_row: 10
+      valor_start_col: B
+      drop_na: true
+    - internal_series_code: INDEC_IPC_VARIACION_INTERANUAL_PCT_M
+      unit: pct
+      frequency: M
+      sheet: Var. interanual IPC Nacional
+      fecha_row: 6
+      fecha_start_col: B
+      valor_row: 10
+      valor_start_col: B
+      drop_na: true
+

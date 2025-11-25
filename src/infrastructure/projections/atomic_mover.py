@@ -3,8 +3,9 @@
 import logging
 from typing import Any, List
 
-import boto3
 from botocore.exceptions import ClientError
+
+from src.infrastructure.utils.aws_utils import create_s3_client
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class AtomicProjectionMover:
             aws_region: AWS region (default: us-east-1).
         """
         self._bucket = bucket
-        self._s3_client = s3_client or boto3.client("s3", region_name=aws_region)
+        self._s3_client = create_s3_client(aws_region=aws_region, s3_client=s3_client)
 
     def move_staging_to_projections(self, dataset_id: str) -> None:
         """Move all files from staging to projections atomically.
